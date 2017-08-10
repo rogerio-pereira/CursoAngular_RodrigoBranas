@@ -1,18 +1,111 @@
 <!DOCTYPE html>
-<html ng-app="helloWorld">
+<html ng-app="listaTelefonica">
 <head>
-    <title>Hello World</title>
+    <title>Lista Telefonica</title>
 
-    <script src="angular.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap/bootstrap.min.css">
+    <style>
+        .jumbotron {
+            width: 400px;
+            text-align:center;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 20px;
+            padding: 20px;
+        }
 
+        .table {
+            margin-top:20px;
+        }
+
+        .form-control {
+            margin-bottom: 5px;
+        }
+    </style>
+
+    <script src="lib/angular/angular.min.js"></script>
     <script>
-        angular.module("helloWorld", []);
-        angular.module("helloWorld").controller("helloWorldCtrl", function($scope) {
-            $scope.message = "Hello World!";
+        angular.module("listaTelefonica", []);
+        angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope) {
+            $scope.app = "Lista Telefonica";
+            
+            $scope.contatos = [
+                {nome: "Pedro", telefone: "99998888" },
+                {nome: "Ana", telefone: "99998877" },
+                {nome: "Maria", telefone: "99998866" }
+            ];
+
+            /*
+                METODO 1
+                PIOR MODO
+                EVITAR ESSE USO
+                $scope.adicionarContato = function() {
+                    $scope.contatos.push({nome: $scope.nome, telefone:$scope.telefone})
+                }
+            */
+
+            /*
+                METODO 2
+                MODO MÉDIO
+                $scope.adicionarContato = function(nome, telefone) {
+                    $scope.contatos.push({nome: nome, telefone: telefone})
+                }
+            */
+           
+            /*
+                METODO 3
+                MELHOR METODO
+            */
+            $scope.adicionarContato = function(contato) {
+                //Usa o angular.copy porque se não ao alterar no formulario irá alterar na tabela tbm
+                $scope.contatos.push(angular.copy(contato));
+
+                //Garante que o contato do scope (intermediário entre view e model) será apagado
+                delete $scope.contato;
+            }
         });
     </script>
 </head>
-<body ng-controller="helloWorldCtrl">
-    {{message}}
+<body ng-controller="listaTelefonicaCtrl">
+    <div class='jumbotron'>
+        <h3>{{app}}</h3>
+
+        <table class='table table-striped'>
+            <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+            </tr>
+            <tr ng-repeat="contato in contatos">
+                <td>{{contato.nome}}</td>
+                <td>{{contato.telefone}}</td>
+                <!--<td ng-repeat="(key,value) in contato">
+                    {{value}}
+                </td>-->
+            </tr>
+        </table>
+
+        <hr>
+
+        <!--
+            METODO 1 E 2
+            <input class='form-control' type='text' placeholder="Nome" ng-model="nome" />
+            <input class='form-control' type='text' placeholder="Telefone" ng-model="telefone" />
+        -->
+        <!--
+            METODO 1
+            <button class='btn btn-primary btn-block' ng-click="adicionarContato()">Adicionar Contato</button>
+        -->
+
+        <!--
+            METODO 2
+            <button class='btn btn-primary btn-block' ng-click="adicionarContato(nome, telefone)">Adicionar Contato</button>
+        -->
+
+        <!--METODO 3-->
+        <input class='form-control' type='text' placeholder="Nome" ng-model="contato.nome" />
+        <input class='form-control' type='text' placeholder="Telefone" ng-model="contato.telefone" />
+        <button class='btn btn-primary btn-block' ng-click="adicionarContato(contato)">Adicionar Contato</button>
+        {{contato}}
+    </div>
 </body>
 </html>
