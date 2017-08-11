@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="listaTelefonica">
 <head>
+    <meta charset="utf-8">
     <title>Lista Telefonica</title>
 
     <link rel="stylesheet" type="text/css" href="lib/bootstrap/bootstrap.min.css">
@@ -32,8 +33,9 @@
     </style>
 
     <script src="lib/angular/angular.min.js"></script>
+    <script src="lib/angular/angular-messages.min.js"></script>
     <script>
-        angular.module("listaTelefonica", []);
+        angular.module("listaTelefonica", ["ngMessages"]);
         angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope) {
             $scope.app = "Lista Telefonica";
             
@@ -50,13 +52,16 @@
                 {nome: "GVT", codigo: 25, categoria: "Fixo"},
                 {nome: "Embratel", codigo: 21, categoria: "Fixo"},
             ];
-            
+
             $scope.adicionarContato = function(contato) {
                 //Usa o angular.copy porque se não ao alterar no formulario irá alterar na tabela tbm
                 $scope.contatos.push(angular.copy(contato));
 
                 //Garante que o contato do scope (intermediário entre view e model) será apagado
                 delete $scope.contato;
+
+                //Define que os campos nunca foram preenchidos
+                $scope.contatoForm.$setPristine();
             };
 
             $scope.apagarContatos = function(contatos) {
@@ -107,19 +112,48 @@
 
         <hr>
 
-        <input class='form-control' type='text' placeholder="Nome" ng-model="contato.nome" />
-        
-        <input class='form-control' type='text' placeholder="Telefone" ng-model="contato.telefone" />
+        <form name="contatoForm">
+            <input type='text' name="nome" class='form-control' placeholder="Nome" ng-model="contato.nome" ng-required="true" ng-minlength="10" />
+            
+            <input type='text' name="telefone" class='form-control' placeholder="Telefone" ng-model="contato.telefone" ng-required="true" ng-pattern="/^\d{4,5}-\d{4}$/"/>
 
-        <select class='form-control' ng-model="contato.operadora" ng-options="operadora.nome for operadora in operadoras">
-            <option value="">Selecione uma operadora</option>
-        </select>
+            <select class='form-control' ng-model="contato.operadora" ng-options="operadora.nome for operadora in operadoras">
+                <option value="">Selecione uma operadora</option>
+            </select>
+        </form>
+
+        <div ng-messages="contatoForm.nome.$error" class='alert alert-danger' >
+            <!--
+                DIRTY SIGNIFICA QUE O CAMPO JÁ FOI PREENCHIDO ALGUMA VEZ
+
+                SE CASO QUISÉSSEMOS VERIFICAR SE O CAMPO NUNCA FOI PREENCHIDO, USARIAMOS $PRISTINE
+
+                SE CASO APENAS QUISÉSSEMOS VALIDAR SE É VALIDO OU INVALIDO PODERIAMOS USAR: contatoForm.nome.$invalid
+            -->
+            <div ng-message=".required">
+                Por favor preencha o nome.
+            </div>
+
+            <div ng-message="minlength">
+                O campo nome deve ter no mínimo 10 caracteres.
+            </div>
+        </div>
+
+        <div ng-messages="contatoForm.telefone.$error" class='alert alert-danger' >
+            <div ng-message="required">
+                Por favor preencha o telefone.
+            </div>
+
+            <div ng-message="pattern">
+                O campo deve ter o formato XXXX-XXXX ou XXXXX-XXXX
+            </div>
+        </div>
 
         <button 
             class='btn btn-primary btn-block' 
             ng-click="adicionarContato(contato)" 
-            ng-disabled="!contato.nome || !contato.telefone"
-        >
+            ng-disabled="contatoForm.$invalid"
+            >
             Adicionar Contato
         </button>
 
