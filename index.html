@@ -50,28 +50,7 @@
                 {nome: "GVT", codigo: 25, categoria: "Fixo"},
                 {nome: "Embratel", codigo: 21, categoria: "Fixo"},
             ];
-
-            /*
-                METODO 1
-                PIOR MODO
-                EVITAR ESSE USO
-                $scope.adicionarContato = function() {
-                    $scope.contatos.push({nome: $scope.nome, telefone:$scope.telefone})
-                }
-            */
-
-            /*
-                METODO 2
-                MODO MÉDIO
-                $scope.adicionarContato = function(nome, telefone) {
-                    $scope.contatos.push({nome: nome, telefone: telefone})
-                }
-            */
-           
-            /*
-                METODO 3
-                MELHOR METODO
-            */
+            
             $scope.adicionarContato = function(contato) {
                 //Usa o angular.copy porque se não ao alterar no formulario irá alterar na tabela tbm
                 $scope.contatos.push(angular.copy(contato));
@@ -100,8 +79,6 @@
     <div class='jumbotron'>
         <h3>{{app}}</h3>
 
-        <!--{{contatos}}-->
-
         <table class='table' ng-show="contatos.length > 0">
             <tr>
                 <th></th>
@@ -110,11 +87,7 @@
                 <th>Operadora</th>
                 <th>Cor</th>
             </tr>
-            <!--
-                Adiciona a classe selecionado e negrito quando o objeto for selecionado
-                <tr ng-class="{selecionado: contato.selecionado, negrito: contato.selecionado}" ng-repeat="contato in contatos">
-            -->
-            <!--Simplificando-->
+
             <tr ng-class="{'selecionado negrito': contato.selecionado}" ng-repeat="contato in contatos">
                 <td>
                     <input type='checkbox' ng-model="contato.selecionado">
@@ -122,9 +95,6 @@
                 <td>{{contato.nome}}</td>
                 <td>{{contato.telefone}}</td>
                 <td>{{contato.operadora.nome}}</td>
-                <!--<td ng-repeat="(key,value) in contato">
-                    {{value}}
-                </td>-->
                 <td>
                     <div 
                         style="width:20px; height: 20px;" 
@@ -137,52 +107,13 @@
 
         <hr>
 
-        <!--
-            METODO 1 E 2
-            <input class='form-control' type='text' placeholder="Nome" ng-model="nome" />
-            <input class='form-control' type='text' placeholder="Telefone" ng-model="telefone" />
-        -->
-        <!--
-            METODO 1
-            <button class='btn btn-primary btn-block' ng-click="adicionarContato()">Adicionar Contato</button>
-        -->
-
-        <!--
-            METODO 2
-            <button class='btn btn-primary btn-block' ng-click="adicionarContato(nome, telefone)">Adicionar Contato</button>
-        -->
-
-        <!--METODO 3-->
         <input class='form-control' type='text' placeholder="Nome" ng-model="contato.nome" />
         
         <input class='form-control' type='text' placeholder="Telefone" ng-model="contato.telefone" />
 
-        <!--
-            PRIMEIRA FORMA DE NG-OPTIONS
-            O VALOR DO OPTION SERÁ O OBJETO INTEIRO
-        -->
         <select class='form-control' ng-model="contato.operadora" ng-options="operadora.nome for operadora in operadoras">
             <option value="">Selecione uma operadora</option>
         </select>
-
-        <!--
-            SEGUNDA FORMA DE NG-OPTIONS
-            O VALOR DO OPTION SERÁ SOMENTE O VALOR PASSADO NO PRIMEIRO PARAMETRO
-
-            <select class='form-control' ng-model="contato.operadora" ng-options="operadora.codigo as operadora.nome for operadora in operadoras">
-                <option value="">Selecione uma operadora</option>
-            </select>
-        -->
-
-        <!--
-            TERCEIRA FORMA DE NG-OPTIONS
-            EXIBE LABELS DAS CATEGORIAS
-            
-            <select class='form-control' ng-model="contato.operadora" ng-options="operadora.nome group by operadora.categoria for operadora in operadoras">
-                <option value="">Selecione uma operadora</option>
-            </select>
-        -->
-        
 
         <button 
             class='btn btn-primary btn-block' 
@@ -192,47 +123,6 @@
             Adicionar Contato
         </button>
 
-        <!--
-            USO DE NG-DISABLED
-
-            <button 
-                class='btn btn-danger btn-block' 
-                ng-click="apagarContatos(contatos)" 
-                ng-disabled="!isContatosSelecionados(contatos)"
-            >
-                Apagar Contatos
-            </button>
-        -->
-
-        <!--
-            USO DE NG-SHOW E NG-HIDE
-            APENAS ALTERAR A PROPRIEDADE DISPLAY DO CSS(BLOCK E NONE), O ELEMENTO AINDA VAI EXISTIR
-            USAR QUANDO NAO VAI ALTERAR A PERFORMANCE, 
-
-            <button 
-                class='btn btn-danger btn-block' 
-                ng-click="apagarContatos(contatos)" 
-                ng-show="isContatosSelecionados(contatos)"
-            >
-                Apagar Contatos
-            </button>
-
-            <button 
-                class='btn btn-danger btn-block' 
-                ng-click="apagarContatos(contatos)" 
-                ng-hide="!isContatosSelecionados(contatos)"
-            >
-                Apagar Contatos
-            </button>
-        -->
-
-
-
-        <!--
-            USO DE NG-IF
-            INSERE E REMOVE O ELEMENTO
-            USAR QUANDO  VAI ALTERAR A PERFORMANCE, POR EXEMPLO A EXIBIÇÃO DE UM VIDEO OU IMAGEM
-        -->
         <button 
             class='btn btn-danger btn-block' 
             ng-click="apagarContatos(contatos)" 
@@ -240,11 +130,8 @@
             >
             Apagar Contatos
         </button>
-
-        <!--{{contato}}-->
     </div>
 
-    <!--Precisa das duas aspas "''" para escapar o texto, se não tiver o angular vai entender que está incluindo uma variavel-->
     <div ng-include="'footer.html'"></div>
 </body>
 </html>
