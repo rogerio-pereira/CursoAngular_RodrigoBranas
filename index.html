@@ -21,6 +21,14 @@
         .form-control {
             margin-bottom: 5px;
         }
+
+        .selecionado {
+            background-color: yellow;   
+        }
+
+        .negrito {
+            font-weight: bold;
+        }
     </style>
 
     <script src="lib/angular/angular.min.js"></script>
@@ -30,9 +38,17 @@
             $scope.app = "Lista Telefonica";
             
             $scope.contatos = [
-                {nome: "Pedro", telefone: "99998888" },
-                {nome: "Ana", telefone: "99998877" },
-                {nome: "Maria", telefone: "99998866" }
+                {nome: "Pedro", telefone: "99998888", cor: "blue"},
+                {nome: "Ana", telefone: "99998877", cor: "yellow"},
+                {nome: "Maria", telefone: "99998866", cor: "red"}
+            ];
+
+            $scope.operadoras = [
+                {nome: "Oi", codigo: 14, categoria: "Celular"},
+                {nome: "Vivo", codigo: 15, categoria: "Celular"},
+                {nome: "Tim", codigo: 16, categoria: "Celular"},
+                {nome: "GVT", codigo: 25, categoria: "Fixo"},
+                {nome: "Embratel", codigo: 21, categoria: "Fixo"},
             ];
 
             /*
@@ -62,7 +78,21 @@
 
                 //Garante que o contato do scope (intermediário entre view e model) será apagado
                 delete $scope.contato;
-            }
+            };
+
+            $scope.apagarContatos = function(contatos) {
+                $scope.contatos = contatos.filter(function (contato) {
+                    //Se selecionado for false ele fica
+                    if(!contato.selecionado)
+                        return contato;
+                });
+            };
+
+            $scope.isContatosSelecionados = function(contatos) {
+                return contatos.some(function (contato) {
+                    return contato.selecionado;
+                });
+            };
         });
     </script>
 </head>
@@ -70,17 +100,38 @@
     <div class='jumbotron'>
         <h3>{{app}}</h3>
 
-        <table class='table table-striped'>
+        <!--{{contatos}}-->
+
+        <table class='table' ng-show="contatos.length > 0">
             <tr>
+                <th></th>
                 <th>Nome</th>
                 <th>Telefone</th>
+                <th>Operadora</th>
+                <th>Cor</th>
             </tr>
-            <tr ng-repeat="contato in contatos">
+            <!--
+                Adiciona a classe selecionado e negrito quando o objeto for selecionado
+                <tr ng-class="{selecionado: contato.selecionado, negrito: contato.selecionado}" ng-repeat="contato in contatos">
+            -->
+            <!--Simplificando-->
+            <tr ng-class="{'selecionado negrito': contato.selecionado}" ng-repeat="contato in contatos">
+                <td>
+                    <input type='checkbox' ng-model="contato.selecionado">
+                </td>
                 <td>{{contato.nome}}</td>
                 <td>{{contato.telefone}}</td>
+                <td>{{contato.operadora.nome}}</td>
                 <!--<td ng-repeat="(key,value) in contato">
                     {{value}}
                 </td>-->
+                <td>
+                    <div 
+                        style="width:20px; height: 20px;" 
+                        ng-style="{'background-color': contato.cor}"
+                    >
+                    </div>
+                </td>
             </tr>
         </table>
 
@@ -103,9 +154,97 @@
 
         <!--METODO 3-->
         <input class='form-control' type='text' placeholder="Nome" ng-model="contato.nome" />
+        
         <input class='form-control' type='text' placeholder="Telefone" ng-model="contato.telefone" />
-        <button class='btn btn-primary btn-block' ng-click="adicionarContato(contato)">Adicionar Contato</button>
-        {{contato}}
+
+        <!--
+            PRIMEIRA FORMA DE NG-OPTIONS
+            O VALOR DO OPTION SERÁ O OBJETO INTEIRO
+        -->
+        <select class='form-control' ng-model="contato.operadora" ng-options="operadora.nome for operadora in operadoras">
+            <option value="">Selecione uma operadora</option>
+        </select>
+
+        <!--
+            SEGUNDA FORMA DE NG-OPTIONS
+            O VALOR DO OPTION SERÁ SOMENTE O VALOR PASSADO NO PRIMEIRO PARAMETRO
+
+            <select class='form-control' ng-model="contato.operadora" ng-options="operadora.codigo as operadora.nome for operadora in operadoras">
+                <option value="">Selecione uma operadora</option>
+            </select>
+        -->
+
+        <!--
+            TERCEIRA FORMA DE NG-OPTIONS
+            EXIBE LABELS DAS CATEGORIAS
+            
+            <select class='form-control' ng-model="contato.operadora" ng-options="operadora.nome group by operadora.categoria for operadora in operadoras">
+                <option value="">Selecione uma operadora</option>
+            </select>
+        -->
+        
+
+        <button 
+            class='btn btn-primary btn-block' 
+            ng-click="adicionarContato(contato)" 
+            ng-disabled="!contato.nome || !contato.telefone"
+        >
+            Adicionar Contato
+        </button>
+
+        <!--
+            USO DE NG-DISABLED
+
+            <button 
+                class='btn btn-danger btn-block' 
+                ng-click="apagarContatos(contatos)" 
+                ng-disabled="!isContatosSelecionados(contatos)"
+            >
+                Apagar Contatos
+            </button>
+        -->
+
+        <!--
+            USO DE NG-SHOW E NG-HIDE
+            APENAS ALTERAR A PROPRIEDADE DISPLAY DO CSS(BLOCK E NONE), O ELEMENTO AINDA VAI EXISTIR
+            USAR QUANDO NAO VAI ALTERAR A PERFORMANCE, 
+
+            <button 
+                class='btn btn-danger btn-block' 
+                ng-click="apagarContatos(contatos)" 
+                ng-show="isContatosSelecionados(contatos)"
+            >
+                Apagar Contatos
+            </button>
+
+            <button 
+                class='btn btn-danger btn-block' 
+                ng-click="apagarContatos(contatos)" 
+                ng-hide="!isContatosSelecionados(contatos)"
+            >
+                Apagar Contatos
+            </button>
+        -->
+
+
+
+        <!--
+            USO DE NG-IF
+            INSERE E REMOVE O ELEMENTO
+            USAR QUANDO  VAI ALTERAR A PERFORMANCE, POR EXEMPLO A EXIBIÇÃO DE UM VIDEO OU IMAGEM
+        -->
+        <button 
+            class='btn btn-danger btn-block' 
+            ng-click="apagarContatos(contatos)" 
+            ng-if="isContatosSelecionados(contatos)"
+            >
+            Apagar Contatos
+        </button>
+
+        <!--{{contato}}-->
     </div>
+
+    <!--Precisa das duas aspas "''" para escapar o texto, se não tiver o angular vai entender que está incluindo uma variavel-->
+    <div ng-include="'footer.html'"></div>
 </body>
 </html>
