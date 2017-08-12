@@ -35,41 +35,43 @@
     <script src="lib/angular/angular.min.js"></script>
     <script src="lib/angular/angular-messages.min.js"></script>
     <script src="lib/angular/angular-locale_pt-br.js"></script>
-    <script>
+    <script>    
         angular.module("listaTelefonica", ["ngMessages"]);
-        /*
-            $filter no construtor do controller estamos importando a classe de filtros
 
-            Método 2
-                importar o nome do filter sufixado com Filter, ex: uppercaseFilter
-                na chamada do método de uppercase no lugar de $filter('uppercase')("Pedro"), no método 2 seria uppercaseFilter("Pedro")
+        /*
+            Invocação de $http para usar ajax
          */
-        angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope, $filter) {
+        angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope, $http) {
+
             $scope.app = "Lista Telefonica";
             
-            $scope.contatos = [
-                {nome: $filter('uppercase')("Pedro"), telefone: "99998888", data: new Date(), operadora: {nome: "Oi", codigo: 14, categoria: "Celular"}, cor: "blue"},
-                {nome: $filter('uppercase')("Ana"), telefone: "99998877", data: new Date(), operadora: {nome: "Vivo", codigo: 15, categoria: "Celular"}, cor: "yellow"},
-                {nome: $filter('uppercase')("Maria"), telefone: "99998866", data: new Date(), operadora: {nome: "GVT", codigo: 25, categoria: "Fixo"}, cor: "blue"}
-            ];
+            $scope.contatos = [];
 
-            $scope.operadoras = [
-                {nome: "Oi", codigo: 14, categoria: "Celular", preco:2},
-                {nome: "Vivo", codigo: 15, categoria: "Celular", preco:1},
-                {nome: "Tim", codigo: 16, categoria: "Celular", preco:3},
-                {nome: "GVT", codigo: 25, categoria: "Fixo", preco:1},
-                {nome: "Embratel", codigo: 21, categoria: "Fixo", preco:2},
-            ];
+            $scope.operadoras = [];
+
+            /*
+                Não precisa usar $scope. porque não vai ser usado na view
+             */
+            var carregarContatos = function() {
+                $http.get("http://localhost:8000/api/contatos").then(function (response) {
+                    $scope.contatos = response.data;
+                });
+            };
+
+            var carregarOperadoras = function() {
+                $http.get("http://localhost:8000/api/operadoras").then(function (response) {
+                    $scope.operadoras = response.data;
+                });
+            };
 
             $scope.adicionarContato = function(contato) {
-                //Usa o angular.copy porque se não ao alterar no formulario irá alterar na tabela tbm
-                $scope.contatos.push(angular.copy(contato));
-
-                //Garante que o contato do scope (intermediário entre view e model) será apagado
-                delete $scope.contato;
-
-                //Define que os campos nunca foram preenchidos
-                $scope.contatoForm.$setPristine();
+                $http.post("http://localhost:8000/api/contatos", contato).then(function (response) {
+                    delete $scope.contato;
+                    $scope.contatoForm.$setPristine();
+                    carregarContatos();
+                }).catch(function (data, status) {
+                    $scope.message = "Aconteceu um problema.";
+                });
             };
 
             $scope.apagarContatos = function(contatos) {
@@ -90,6 +92,9 @@
                 $scope.criterioDeOrdenacao = campo;
                 $scope.direcaoDaOrdenacao = !$scope.direcaoDaOrdenacao;
             }
+
+            carregarContatos();
+            carregarOperadoras();
         });
     </script>
 </head>
@@ -98,6 +103,9 @@
         <h3>{{app}}</h3>
 
         <input type='text' placeholder="O que você está buscando?" class="form-control" ng-model="criterioDeBusca">
+    
+        {{message}}
+
         <table class='table' ng-show="contatos.length > 0">
             <tr>
                 <th></th>
@@ -108,30 +116,10 @@
                 <th><a href='' ng-click="ordenarPor('cor')">Cor</a></th>
             </tr>
 
-            <!--
-                O filtro poderia ser:
-                    String (deve estar entre '')
-                        'pedro'
-                    Campo (nao deve ter '', é usado o ng-model do campo utilizado)
-                        criterioDeBusca
-                    Objeto (deve estar entre {} e ter : separando o campo)
-                        {nome: criterioDeBusca}
-
-                Se quiser usar mais de um filtro basta adicionar | #FILTRO#: a frente do filtro anterior, os filtros são aplicados de acordo com a order de definição, então alterar um filtro de posição com outro, pode alterar o resultado
-
-                Filtros influenciam na performance da aplicação, por isso o ideal é aplicar os filtros no controller e nao na view
-
-                orderBy Asc : orderBy:'+nome' OU orderBY:'nome':false
-                orderBy Desc : orderBy:'-nome' OU orderBY:'nome':true
-
-                limitTo:X -> Limita o numero para x itens
-                    Pode ser aplicado a arrays, que irá limitar o numero de itens do array, ou para strings que limitará o tamanho da string
-            -->
             <tr ng-class="{'selecionado negrito': contato.selecionado}" ng-repeat="contato in contatos | filter:{nome: criterioDeBusca} | orderBy:criterioDeOrdenacao:direcaoDaOrdenacao">
                 <td>
                     <input type='checkbox' ng-model="contato.selecionado">
                 </td>
-                <!--O Pipe (|) signifiga que será aplicado algum filtro-->
                 <td>{{contato.nome}}</td>
                 <td>{{contato.telefone}}</td>
                 <td>{{contato.operadora.nome | lowercase}}</td>
@@ -153,7 +141,7 @@
             
             <input type='text' name="telefone" class='form-control' placeholder="Telefone" ng-model="contato.telefone" ng-required="true" ng-pattern="/^\d{4,5}-\d{4}$/"/>
 
-            <select class='form-control' ng-model="contato.operadora" ng-options="operadora.nome + ' (' + (operadora.preco | currency ) + ' por minuto)' for operadora in operadoras | orderBy:'nome'">
+            <select class='form-control' ng-model="contato.operator_id" ng-options="operadora.id as operadora.nome + ' (' + (operadora.preco | currency ) + ' por minuto)' for operadora in operadoras | orderBy:'nome'">
                 <option value="">Selecione uma operadora</option>
             </select>
         </form>
@@ -193,14 +181,6 @@
             >
             Apagar Contatos
         </button>
-
-        <!--
-            FORMATACAO DE NUMEROS (já arredonda o valor)
-
-            {{100 | number}} -> Numero inteiro (100)
-            {{100 | number:2}} -> Numero com ponto flutuante (100,00)
-            {{ 100.96 | number:1 }} -> Numero com ponto flutuante (101,0)
-        -->
     </div>
 
     <div ng-include="'footer.html'"></div>
